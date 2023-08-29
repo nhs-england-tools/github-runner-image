@@ -6,31 +6,16 @@ include ./scripts/test.mk
 
 # Example targets are: dependencies, build, publish, deploy, clean, etc.
 
-dependencies: # Install dependencies needed to build and test the project
-	# TODO: Implement installation of your project dependencies
+DOCKER_IMAGE := gcr.io/nhs-england-tools/github-runner-image
+DOCKER_TITLE := "GitHub Runner Image"
 
 build: # Build the project artefact
-	# TODO: Implement the artefact build step
+	make docker-build
 
 publish: # Publish the project artefact
-	# TODO: Implement the artefact publishing step
-
-deploy: # Deploy the project artefact to the target environment
-	# TODO: Implement the artefact deployment step
-
-clean:: # Clean-up project resources
-	# TODO: Implement project resources clean-up step
-
-config:: # Configure development environment
-	# TODO: Use only `make` targets that are specific to this project, e.g. you may not need to install Node.js
-	make \
-		nodejs-install \
-		python-install \
-		terraform-install
+	source ./scripts/docker/docker.lib.sh
+	docker-push
 
 .SILENT: \
 	build \
-	clean \
-	config \
-	dependencies \
-	deploy \
+	publish \
