@@ -6,7 +6,7 @@ include ./scripts/test.mk
 
 # Example targets are: dependencies, build, publish, deploy, clean, etc.
 
-DOCKER_IMAGE := gcr.io/nhs-england-tools/github-runner-image
+DOCKER_IMAGE := ghcr.io/nhs-england-tools/github-runner-image
 DOCKER_TITLE := "GitHub Runner Image"
 
 build: # Build the project artefact
