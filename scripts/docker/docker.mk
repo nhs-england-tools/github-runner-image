@@ -10,6 +10,10 @@ docker-build: # Build Docker image - optional: dir=[path to the Dockerfile to us
 	source ./scripts/docker/docker.lib.sh
 	docker-build
 
+docker-push: # Push Docker image - optional: dir=[path to the image directory where the Dockerfile is located, default is '.']
+	source ./scripts/docker/docker.lib.sh
+	docker-push
+
 clean:: # Remove Docker resources
 	source ./scripts/docker/docker.lib.sh
 	docker-clean

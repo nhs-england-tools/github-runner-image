@@ -1,19 +1,9 @@
 # GitHub Runner Image
 
-[![CI/CD Pull Request](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml/badge.svg)](https://github.com/nhs-england-tools/repository-template/actions/workflows/cicd-1-pull-request.yaml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=repository-template&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=repository-template)
+[![Publish](https://github.com/nhs-england-tools/github-runner-image/actions/workflows/cicd-2-publish.yaml/badge.svg)](https://github.com/nhs-england-tools/github-runner-image/actions/workflows/cicd-2-publish.yaml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=github-runner-image&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=github-runner-image)
 
-Start with an overview or a brief description of what the project is about and what it does. For example -
-
-Welcome to our repository template designed to streamline your project setup! This robust template provides a reliable starting point for your new projects, covering an essential tech stack and encouraging best practices in documenting.
-
-This repository template aims to foster a user-friendly development environment by ensuring that every included file is concise and adequately self-documented. By adhering to this standard, we can promote increased clarity and maintainability throughout your project's lifecycle. Bundled within this template are resources that pave the way for seamless repository creation. Our supported tech stack includes:
-
-- Terraform
-- Python
-- Node.js
-
-Make use of this repository template to expedite your project setup and enhance your productivity right from the get-go. Enjoy the advantage of having a well-structured, self-documented project that reduces overhead and increases focus on what truly matters - coding!
+TODO: Overview
 
 ## Table of Contents
 
@@ -38,8 +28,8 @@ By including preferably a one-liner or if necessary a set of clear CLI instructi
 Clone the repository
 
 ```shell
-git clone https://github.com/nhs-england-tools/repository-template.git
-cd nhs-england-tools/repository-template
+git clone https://github.com/nhs-england-tools/github-runner-image.git
+cd nhs-england-tools/github-runner-image
 ```
 
 ### Prerequisites
@@ -49,7 +39,7 @@ The following software packages or their equivalents are expected to be installe
 - [GNU make](https://www.gnu.org/software/make/) **v3.82 or later: OS X users, take note below**
 - [Docker](https://www.docker.com/)
 
-Note that the version of GNU Make available by default on OS X is earlier than this.  You will need to upgrade it, or certain `make` tasks will fail.  On OS X, you will need [homebrew](https://brew.sh/) installed, then to install `make`, like so:
+Note that the version of GNU Make available by default on OS X is earlier than this.  You will need to upgrade it, or certain `make` tasks will fail. On OS X, you will need [homebrew](https://brew.sh/) installed, then to install `make`, like so:
 
 ```shell
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
@@ -79,15 +69,29 @@ After a successful installation, provide an informative example of how this proj
 
 ### Testing
 
-There are `make` tasks for you to configure to run your tests.  Run `make test` to see how they work.  You should be able to use the same entry points for local development as in your CI pipeline.
+There are `make` tasks for you to configure to run your tests. Run `make test` to see how they work.  You should be able to use the same entry points for local development as in your CI pipeline.
 
 ## Architecture
 
 ### Diagrams
 
-The [C4 model](https://c4model.com/) is a simple and intuitive way to create software architecture diagrams that are clear, consistent, scalable and most importantly collaborative. This should result in documenting all the system interfaces, external dependencies and integration points.
-
-![Repository Template](./docs/diagrams/Repository_Template_GitHub_Generic.png)
+```mermaid
+C4Container
+  Boundary(b1, "Foundation Images", "") {
+    Component(base_image, "Base Image", "System dependencies, Development tools, Docker, Node.js", "Provides the base packages for all the images built on top of it")
+    Component(gh_act_image, "GitHub Base Image", "Development dependencies and tools", "Builds on top of the base image adding GitHub specific packages")
+    Component(gh_aws_image, "GitHub AWS", "AWS development dependencies and tools", "This base image comes with packages and tools<br>which make it compatible with the AWS cloud services")
+    Component(gh_azure_image, "GitHub Azure", "Azure development dependencies and tools", "This base image comes with packages and tools<br>which make it compatible with the Azure cloud services")
+  }
+  Boundary(b2, "Service Images", "") {
+    Component_Ext(service_image, "Service Image", "Service dependencies and tools", "Preloads all the build and test dependencies<br> which are used in the CI/CD pipeline")
+  }
+  Rel(gh_act_image, base_image, "Is built from")
+  Rel(gh_aws_image, gh_act_image, "Is built from")
+  Rel(gh_azure_image, gh_act_image, "Is built from")
+  Rel(service_image, gh_aws_image, "Is built from")
+  UpdateLayoutConfig($c4ShapeInRow="2", $c4BoundaryInRow="1")
+```
 
 ### Configuration
 
