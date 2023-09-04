@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build Docker image
         run: |
           export BUILD_DATETIME=${{ inputs.build_datetime }}

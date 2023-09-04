@@ -14,7 +14,7 @@ jobs:
       build_epoch: ${{ steps.variables.outputs.build_epoch }}
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: "Set CI/CD variables"
         id: variables
         run: |
@@ -37,7 +37,7 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: "Checkout code"
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: "Get the artefacts"
         run: |
           echo "Getting the artefacts created by the build stage ..."
