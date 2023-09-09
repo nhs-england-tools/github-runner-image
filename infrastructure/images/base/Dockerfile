@@ -1,4 +1,4 @@
-FROM ubuntu:22.04@sha256:56887c5194fddd8db7e36ced1c16b3569d89f74c801dc8a5adbf48236fb34564
+FROM --platform=linux/amd64 ubuntu:22.04@sha256:56887c5194fddd8db7e36ced1c16b3569d89f74c801dc8a5adbf48236fb34564
 
 ENV \
     # SEE: https://docs.docker.com/release-notes/
@@ -61,3 +61,7 @@ RUN set -eux && \
     docker-compose --version && \
     docker buildx version && \
     node --version
+
+RUN set -eux && \
+    \
+    git config --global --add safe.directory '*'
