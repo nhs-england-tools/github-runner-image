@@ -89,7 +89,7 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs: [metadata, acceptance-stage]
-    if: github.event.pull_request.merged == 'true'
+    # if: github.event.pull_request.merged == 'true'
     steps:
       - name: "Trigger the publish workflow"
         run: |
