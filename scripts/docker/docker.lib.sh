@@ -35,14 +35,14 @@ function docker-build() {
     --build-arg GIT_BRANCH="$(_get-git-branch-name)" \
     --build-arg GIT_COMMIT_HASH="$(git rev-parse --short HEAD)" \
     --build-arg BUILD_DATE="$(date -u +"%Y-%m-%dT%H:%M:%S%z")" \
-    --build-arg BUILD_VERSION="$(_get-version)" \
-    --tag "${DOCKER_IMAGE}:$(_get-version)" \
+    --build-arg BUILD_VERSION="$(_get-effective-version)" \
+    --tag "${DOCKER_IMAGE}:$(_get-effective-version)" \
     --rm \
     --file "${dir}/Dockerfile.effective" \
     .
   # Tag the image with all the stated versions, see the documentation for more details
-  for version in $(_get-all-versions) latest; do
-    docker tag "${DOCKER_IMAGE}:$(_get-version)" "${DOCKER_IMAGE}:${version}"
+  for version in $(_get-all-effective-versions) latest; do
+    docker tag "${DOCKER_IMAGE}:$(_get-effective-version)" "${DOCKER_IMAGE}:${version}"
   done
   docker rmi --force "$(docker images | grep "<none>" | awk '{print $3}')" 2> /dev/null ||:
 }
@@ -59,7 +59,7 @@ function docker-check-test() {
   # shellcheck disable=SC2086,SC2154
   docker run --rm --platform linux/amd64 \
     ${args:-} \
-    "${DOCKER_IMAGE}:$(_get-version)" 2>/dev/null \
+    "${DOCKER_IMAGE}:$(_get-effective-version)" 2>/dev/null \
     ${cmd:-} \
   | grep -q "${check}" && echo PASS || echo FAIL
 }
@@ -75,7 +75,7 @@ function docker-run() {
   # shellcheck disable=SC2086
   docker run --rm --platform linux/amd64 \
     ${args:-} \
-    "${DOCKER_IMAGE}:$(dir="$dir" _get-version)" \
+    "${DOCKER_IMAGE}:$(dir="$dir" _get-effective-version)" \
     ${cmd:-}
 }
 
@@ -86,7 +86,7 @@ function docker-push() {
 
   local dir=${dir:-$PWD}
   # Push all the image tags based on the stated versions, see the documentation for more details
-  for version in $(dir="$dir" _get-all-versions) latest; do
+  for version in $(dir="$dir" _get-all-effective-versions) latest; do
     docker push "${DOCKER_IMAGE}:${version}"
   done
 }
@@ -97,7 +97,7 @@ function docker-push() {
 function docker-clean() {
 
   local dir=${dir:-$PWD}
-  for version in $(dir="$dir" _get-all-versions) latest; do
+  for version in $(dir="$dir" _get-all-effective-versions) latest; do
     docker rmi "${DOCKER_IMAGE}:${version}" > /dev/null 2>&1 ||:
   done
   rm -f \
@@ -112,17 +112,19 @@ function docker-clean() {
 function version-create-effective-file() {
 
   local dir=${dir:-$PWD}
-  build_datetime=${BUILD_DATETIME:-$(date -u +'%Y-%m-%dT%H:%M:%S%z')}
-  if [ -f "$dir/VERSION" ]; then
+  local version_file="$dir/VERSION"
+  local build_datetime=${BUILD_DATETIME:-$(date -u +'%Y-%m-%dT%H:%M:%S%z')}
+
+  if [ -f "$version_file" ]; then
     # shellcheck disable=SC2002
-    cat "$dir/VERSION" | \
-      sed "s/yyyy/$(date --date="${build_datetime}" -u +"%Y")/g" | \
-      sed "s/mm/$(date --date="${build_datetime}" -u +"%m")/g" | \
-      sed "s/dd/$(date --date="${build_datetime}" -u +"%d")/g" | \
-      sed "s/HH/$(date --date="${build_datetime}" -u +"%H")/g" | \
-      sed "s/MM/$(date --date="${build_datetime}" -u +"%M")/g" | \
-      sed "s/SS/$(date --date="${build_datetime}" -u +"%S")/g" | \
-      sed "s/hash/$(git rev-parse --short HEAD)/g" \
+    cat "$version_file" | \
+      sed "s/\(\${yyyy}\|\$yyyy\)/$(date --date="${build_datetime}" -u +"%Y")/g" | \
+      sed "s/\(\${mm}\|\$mm\)/$(date --date="${build_datetime}" -u +"%m")/g" | \
+      sed "s/\(\${dd}\|\$dd\)/$(date --date="${build_datetime}" -u +"%d")/g" | \
+      sed "s/\(\${HH}\|\$HH\)/$(date --date="${build_datetime}" -u +"%H")/g" | \
+      sed "s/\(\${MM}\|\$MM\)/$(date --date="${build_datetime}" -u +"%M")/g" | \
+      sed "s/\(\${SS}\|\$SS\)/$(date --date="${build_datetime}" -u +"%S")/g" | \
+      sed "s/\(\${hash}\|\$hash\)/$(git rev-parse --short HEAD)/g" \
     > "$dir/.version"
   fi
 }
@@ -198,7 +200,10 @@ function _create-effective-dockerfile() {
 function _replace-image-latest-by-specific-version() {
 
   local dir=${dir:-$PWD}
-  versions_file=$(git rev-parse --show-toplevel)/.tool-versions
+  local versions_file=$(git rev-parse --show-toplevel)/.tool-versions
+  local dockerfile="${dir}/Dockerfile.effective"
+  local build_datetime=${BUILD_DATETIME:-$(date -u +'%Y-%m-%dT%H:%M:%S%z')}
+
   if [ -f "$versions_file" ]; then
     # First, list the entries specific for Docker to take precedence, then the rest
     content=$(grep " docker/" "$versions_file"; grep -v " docker/" "$versions_file")
@@ -207,9 +212,26 @@ function _replace-image-latest-by-specific-version() {
       line=$(echo "$line" | sed "s/^#\s*//; s/\s*#.*$//" | sed "s;docker/;;")
       name=$(echo "$line" | awk '{print $1}')
       version=$(echo "$line" | awk '{print $2}')
-      sed -i "s;FROM ${name}:latest;FROM ${name}:${version};g" "${dir}/Dockerfile.effective"
+      sed -i "s;\(FROM .*\) ${name}:latest;\1 ${name}:${version};g" "$dockerfile"
     done
   fi
+
+  if [ -f "$dockerfile" ]; then
+    # shellcheck disable=SC2002
+    cat "$dockerfile" | \
+      sed "s/\(\${yyyy}\|\$yyyy\)/$(date --date="${build_datetime}" -u +"%Y")/g" | \
+      sed "s/\(\${mm}\|\$mm\)/$(date --date="${build_datetime}" -u +"%m")/g" | \
+      sed "s/\(\${dd}\|\$dd\)/$(date --date="${build_datetime}" -u +"%d")/g" | \
+      sed "s/\(\${HH}\|\$HH\)/$(date --date="${build_datetime}" -u +"%H")/g" | \
+      sed "s/\(\${MM}\|\$MM\)/$(date --date="${build_datetime}" -u +"%M")/g" | \
+      sed "s/\(\${SS}\|\$SS\)/$(date --date="${build_datetime}" -u +"%S")/g" | \
+      sed "s/\(\${hash}\|\$hash\)/$(git rev-parse --short HEAD)/g" \
+    > "$dockerfile.tmp"
+  mv "$dockerfile.tmp" "$dockerfile"
+  fi
+
+  # Do not ignore the issue if 'latest' is used in the effective image
+  sed -Ei "/# hadolint ignore=DL3007$/d" "${dir}/Dockerfile.effective"
 }
 
 # Append metadata to the end of Dockerfile.
@@ -228,7 +250,7 @@ function _append-metadata() {
 # Print top Docker image version.
 # Arguments (provided as environment variables):
 #   dir=[path to the image directory where the Dockerfile is located, default is '.']
-function _get-version() {
+function _get-effective-version() {
 
   local dir=${dir:-$PWD}
   head -n 1 "${dir}/.version"
@@ -237,7 +259,7 @@ function _get-version() {
 # Print all Docker image versions.
 # Arguments (provided as environment variables):
 #   dir=[path to the image directory where the Dockerfile is located, default is '.']
-function _get-all-versions() {
+function _get-all-effective-versions() {
 
   local dir=${dir:-$PWD}
   cat "${dir}/.version"
