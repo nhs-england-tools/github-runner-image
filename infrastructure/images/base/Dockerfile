@@ -1,11 +1,11 @@
-FROM --platform=linux/amd64 ubuntu:22.04@sha256:56887c5194fddd8db7e36ced1c16b3569d89f74c801dc8a5adbf48236fb34564
+FROM --platform=linux/amd64 ubuntu:22.04@sha256:b492494d8e0113c4ad3fe4528a4b5ff89faa5331f7d52c5c138196f69ce176a6
 
 ENV \
     # SEE: https://docs.docker.com/release-notes/
-    DOCKER_VERSION=24.0.5 \
-    DOCKER_COMPOSE_VERSION=v2.20.3 \
+    DOCKER_VERSION=24.0.6 \
+    DOCKER_COMPOSE_VERSION=v2.21.0 \
     DOCKER_BUILDX_VERSION=v0.11.2 \
-    # SEE: https://deb.nodesource.com/
+    # SEE: https://nodejs.org/
     NODEJS_VERSION=18
 
 RUN set -eux && \
@@ -22,6 +22,7 @@ RUN set -eux && \
         gnupg \
         gzip \
         openssl \
+        tzdata \
         wget \
         xz-utils \
         zip \
