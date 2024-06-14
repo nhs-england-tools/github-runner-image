@@ -3,7 +3,7 @@
 [![Publish](https://github.com/nhs-england-tools/github-runner-image/actions/workflows/cicd-2-publish.yaml/badge.svg)](https://github.com/nhs-england-tools/github-runner-image/actions/workflows/cicd-2-publish.yaml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=github-runner-image&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=github-runner-image)
 
-TODO: Overview
+TODO: Overview 
 
 ## Table of Contents
 
